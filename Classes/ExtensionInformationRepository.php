@@ -82,7 +82,7 @@ class ExtensionInformationRepository
         }
         $this->storage->setExtensionInformation($this->extensionInformation);
     }
-    
+
     /**
      * @param Package[] $packages
      */
@@ -92,6 +92,29 @@ class ExtensionInformationRepository
             $this->setExtensionInformationForPackage($package);
         }
         $this->storage->setExtensionInformation($this->extensionInformation);
+    }
+
+    /**
+     * @param Package $package
+     * @return array
+     */
+    public function getExtensionInformation(Package $package)
+    {
+        return isset($this->extensionInformation[$package->getPackageKey()])
+            ? $this->extensionInformation[$package->getPackageKey()]
+            : $this->fetchExtensionInformation($package);
+    }
+
+    /**
+     * @param Package $package
+     * @return array
+     */
+    public function fetchExtensionInformation(Package $package)
+    {
+        return array(
+            'timestamp' => time(),
+            'checksums' => $this->checksumGenerator->getChecksumsForPath($package->getPackagePath()),
+        );
     }
 
     /**

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2016-02-26T20:48:57Z" product-name="integrity">
+		<header />
+		<body>
+			<trans-unit id="modifiedFilesFound">
+				<source>Modified files found</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
