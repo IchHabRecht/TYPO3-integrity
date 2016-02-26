@@ -1,0 +1,28 @@
+{
+    "name": "ichhabrecht/integrity",
+    "type": "typo3-cms-extension",
+    "description": "Monitors the changes of your TYPO3 CMS extension files",
+    "keywords": [
+        "TYPO3",
+        "integrity",
+        "security"
+    ],
+    "homepage": "https://github.com/IchHabRecht/integrity",
+    "authors": [
+        {
+            "name": "Nicole Cordes",
+            "email": "typo3@cordes.co",
+            "role": "Developer",
+            "homepage": "http://www.cps-it.de"
+        }
+    ],
+    "license": "GPL-2.0+",
+    "require": {
+        "typo3/cms-core": ">=6.2.0,<9.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "IchHabRecht\\Integrity\\": "Classes"
+        }
+    }
+}

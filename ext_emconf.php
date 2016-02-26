@@ -12,7 +12,7 @@
 
 $EM_CONF[$_EXTKEY] = array (
   'title' => 'Extension Integrity Check',
-  'description' => 'Checks the changes of extension files',
+  'description' => 'Monitors the changes of your TYPO3 CMS extension files',
   'category' => 'be',
   'state' => 'stable',
   'uploadfolder' => 0,
