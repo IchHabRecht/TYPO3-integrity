@@ -1,0 +1,8 @@
+2016-02-27         [RELEASE] Release of integrity 0.1.0 (Nicole Cordes)
+2016-02-26 28dfb4a [TASK] Add composer.json (Nicole Cordes)
+2016-02-26 7fbd218 [TASK] Increase maximum supported TYPO3 version (Nicole Cordes)
+2016-02-26 9c3d1c5 [TASK] Add autoload information (Nicole Cordes)
+2016-02-26 cf913a3 [FEATURE] Show warning if changed files are found (Nicole Cordes)
+2016-02-26 b59c21d [FEATURE] Enforce checksum update after TER download (Nicole Cordes)
+2016-02-26 59f30c3 [FEATURE] Write checksums after installation (Nicole Cordes)
+2015-11-21 f9a16a1 [TASK] Add basic extension files (Nicole Cordes)
