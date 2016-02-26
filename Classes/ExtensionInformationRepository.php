@@ -82,6 +82,17 @@ class ExtensionInformationRepository
         }
         $this->storage->setExtensionInformation($this->extensionInformation);
     }
+    
+    /**
+     * @param Package[] $packages
+     */
+    public function updateExtensionInformation(array $packages)
+    {
+        foreach ($packages as $package) {
+            $this->setExtensionInformationForPackage($package);
+        }
+        $this->storage->setExtensionInformation($this->extensionInformation);
+    }
 
     /**
      * @param Package $package

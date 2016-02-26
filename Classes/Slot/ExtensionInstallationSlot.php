@@ -42,6 +42,14 @@ class ExtensionInstallationSlot
         } else {
             $packages = array($packageManager->getPackage($extensionKey));
         }
-        $extensionInformationRepository->addExtensionInformation($packages);
+
+        // There is no other way to find out, if an extension was downloaded from TER
+        // If downloaded from TER we enforce to rewrite current checksums
+        $extensionManagerVariables = GeneralUtility::_GP('tx_extensionmanager_tools_extensionmanagerextensionmanager');
+        if (isset($extensionManagerVariables['action']) && $extensionManagerVariables['action'] === 'installFromTer') {
+            $extensionInformationRepository->updateExtensionInformation($packages);
+        } else {
+            $extensionInformationRepository->addExtensionInformation($packages);
+        }
     }
 }
