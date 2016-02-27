@@ -37,7 +37,11 @@ class ExtensionInformationRepositoryFactory
         $storage = GeneralUtility::makeInstance('IchHabRecht\\Integrity\\Storage\\RegistryStorage');
         $configurationReader = GeneralUtility::makeInstance('IchHabRecht\\Integrity\\ConfigurationReader\\ExtEmconfReader');
         $checksumGenerator = GeneralUtility::makeInstance('IchHabRecht\\Integrity\\ChecksumGenerator\\Md5sumGenerator');
+        $diffComparator = GeneralUtility::makeInstance('IchHabRecht\\Integrity\\DiffComparator\\ArrayDiffComparator');
 
-        return GeneralUtility::makeInstance('IchHabRecht\\Integrity\\ExtensionInformationRepository', $storage, $configurationReader, $checksumGenerator);
+        return GeneralUtility::makeInstance(
+            'IchHabRecht\\Integrity\\ExtensionInformationRepository',
+            $storage, $configurationReader, $checksumGenerator, $diffComparator
+        );
     }
 }

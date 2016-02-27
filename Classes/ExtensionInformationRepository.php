@@ -27,6 +27,7 @@ namespace IchHabRecht\Integrity;
 
 use IchHabRecht\Integrity\ChecksumGenerator\ChecksumGeneratorInterface;
 use IchHabRecht\Integrity\ConfigurationReader\ConfigurationReaderInterface;
+use IchHabRecht\Integrity\DiffComparator\DiffComparatorInterface;
 use IchHabRecht\Integrity\Storage\StorageInterface;
 use TYPO3\CMS\Core\Package\Package;
 
@@ -36,6 +37,11 @@ class ExtensionInformationRepository
      * @var ChecksumGeneratorInterface
      */
     protected $checksumGenerator;
+
+    /**
+     * @var DiffComparatorInterface
+     */
+    protected $diffComparator;
 
     /**
      * @var ConfigurationReaderInterface
@@ -61,12 +67,14 @@ class ExtensionInformationRepository
      * @param StorageInterface $storage
      * @param ConfigurationReaderInterface $configurationReader
      * @param ChecksumGeneratorInterface $checksumGenerator
+     * @param DiffComparatorInterface $diffComparator
      */
-    public function __construct(StorageInterface $storage, ConfigurationReaderInterface $configurationReader, ChecksumGeneratorInterface $checksumGenerator)
+    public function __construct(StorageInterface $storage, ConfigurationReaderInterface $configurationReader, ChecksumGeneratorInterface $checksumGenerator, DiffComparatorInterface $diffComparator)
     {
         $this->storage = $storage;
         $this->configurationReader = $configurationReader;
         $this->checksumGenerator = $checksumGenerator;
+        $this->diffComparator = $diffComparator;
 
         $extensionInformation = $this->storage->getExtensionInformation();
         $this->validateExtensionInformation($extensionInformation);
@@ -108,6 +116,21 @@ class ExtensionInformationRepository
         return isset($this->extensionInformation[$package->getPackageKey()])
             ? $this->extensionInformation[$package->getPackageKey()]
             : $this->fetchExtensionInformation($package);
+    }
+
+    /**
+     * @param Package|null $package
+     * @return array
+     */
+    public function findDifferentExtensionInformation(Package $package)
+    {
+        $storedExtensionInformation = $this->extensionInformation[$package->getPackageKey()];
+        $currentExtensionInformation = $this->fetchExtensionInformation($package);
+
+        return $this->diffComparator->getDifferences(
+            $storedExtensionInformation['checksums'],
+            $currentExtensionInformation['checksums']
+        );
     }
 
     /**
