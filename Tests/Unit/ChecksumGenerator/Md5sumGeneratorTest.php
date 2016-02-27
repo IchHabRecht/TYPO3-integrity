@@ -32,28 +32,163 @@ use TYPO3\CMS\Core\Tests\UnitTestCase;
 class Md5sumGeneratorTest extends UnitTestCase
 {
     /**
+     * @var string
+     */
+    protected $baseDirectory = 'test';
+
+    /**
      * @var Md5sumGenerator
      */
-    protected $subject;
+    protected $generator;
 
     protected function setUp()
     {
-        $this->subject = new Md5sumGenerator();
         parent::setUp();
+        vfsStream::setup($this->baseDirectory);
+
+        $this->generator = new Md5sumGenerator();
+    }
+
+    /**
+     * @return array
+     */
+    public function getChecksumsForPathReturnsChecksumForFilesDataProvider()
+    {
+        $fileContent = 'Hello World!';
+        $fileContentHash = 'ed07';
+
+        return array(
+            'one file' => array(
+                array(
+                    'file.txt' => $fileContent,
+                ),
+                array(),
+                array(
+                    'file.txt' => $fileContentHash,
+                ),
+            ),
+            'empty directories' => array(
+                array(
+                    'foo' => array(
+                        'bar' => array(
+                            'baz' => array(),
+                        ),
+                    ),
+                ),
+                array(),
+                array(),
+            ),
+            'complex structure' => array(
+                array(
+                    'fileA' => $fileContent,
+                    'foo' => array(
+                        'fileB' => $fileContent,
+                        'fileC' => $fileContent,
+                        'bar' => array(
+                            'fileD' => $fileContent,
+                            'baz' => array(
+                                'fileE' => $fileContent,
+                                'fileF' => $fileContent,
+                            ),
+                            'foobar' => array(
+                                'fileG' => $fileContent,
+                            ),
+                        ),
+                    ),
+                ),
+                array(),
+                array(
+                    'fileA' => $fileContentHash,
+                    'foo/fileB' => $fileContentHash,
+                    'foo/fileC' => $fileContentHash,
+                    'foo/bar/fileD' => $fileContentHash,
+                    'foo/bar/baz/fileE' => $fileContentHash,
+                    'foo/bar/baz/fileF' => $fileContentHash,
+                    'foo/bar/foobar/fileG' => $fileContentHash,
+                ),
+            ),
+            'exclude pattern' => array(
+                array(
+                    'fileA' => $fileContent,
+                    '.git' => array(
+                        'index' => $fileContent,
+                        'objects' => array(
+                            '0a' => array(
+                                '0815' => $fileContent,
+                            ),
+                        ),
+                    ),
+                    '.svn' => array(
+                        'entries' => $fileContent,
+                        'pristine' => array(
+                            '0a' => array(
+                                '0815' => $fileContent,
+                            ),
+                        ),
+                    ),
+                    'foo' => array(
+                        'fileB' => $fileContent,
+                        'fileC' => $fileContent,
+                        'bar' => array(
+                            'fileD' => $fileContent,
+                            'baz' => array(
+                                'fileE' => $fileContent,
+                                'fileF' => $fileContent,
+                            ),
+                            'foobar' => array(
+                                'fileG' => $fileContent,
+                            ),
+                        ),
+                    ),
+                ),
+                array(
+                    '.git',
+                    '.svn',
+                ),
+                array(
+                    'fileA' => $fileContentHash,
+                    'foo/fileB' => $fileContentHash,
+                    'foo/fileC' => $fileContentHash,
+                    'foo/bar/fileD' => $fileContentHash,
+                    'foo/bar/baz/fileE' => $fileContentHash,
+                    'foo/bar/baz/fileF' => $fileContentHash,
+                    'foo/bar/foobar/fileG' => $fileContentHash,
+                ),
+            ),
+        );
     }
 
     /**
      * @test
+     * @param array $structure
+     * @param array $excludePattern
+     * @param array $expected
+     * @dataProvider getChecksumsForPathReturnsChecksumForFilesDataProvider
      */
-    public function getChecksumsForPathReturnsChecksumForFile()
+    public function getChecksumsForPathReturnsChecksumForFiles(array $structure, array$excludePattern, array $expected)
     {
-        vfsStream::setup('Test');
-        file_put_contents('vfs://Test/File.txt', 'Hello World!');
-        $expected = array(
-            'File.txt' => 'ed07',
-        );
+        $baseDirectory = vfsStream::url($this->baseDirectory);
+        $this->createTestStructure($baseDirectory, $structure);
 
-        $this->assertSame($expected, $this->subject->getChecksumsForPath('vfs://Test'));
-        $this->assertSame($expected, $this->subject->getChecksumsForPath('vfs://Test/'));
+        $this->assertSame($expected, $this->generator->getChecksumsForPath($baseDirectory, $excludePattern));
+        $this->assertSame($expected, $this->generator->getChecksumsForPath($baseDirectory . '/', $excludePattern));
+    }
+
+    /**
+     * @param string $baseDirectory
+     * @param array $structure
+     */
+    protected function createTestStructure($baseDirectory, array $structure)
+    {
+        if (!@is_dir($baseDirectory)) {
+            mkdir($baseDirectory);
+        }
+        foreach ($structure as $key => $value) {
+            if (is_array($value)) {
+                $this->createTestStructure($baseDirectory . '/' . $key, $value);
+            } else {
+                file_put_contents($baseDirectory . '/' . $key, $value);
+            }
+        }
     }
 }
