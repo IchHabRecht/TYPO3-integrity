@@ -31,12 +31,20 @@ class Md5sumGenerator implements ChecksumGeneratorInterface
 {
     /**
      * @param string $path
+     * @param array $excludePattern
      * @return array
      */
-    public function getChecksumsForPath($path)
+    public function getChecksumsForPath($path, array $excludePattern = array())
     {
         $md5ChecksumArray = array();
-        $filesArray = GeneralUtility::getAllFilesAndFoldersInPath(array(), $path);
+        $filesArray = GeneralUtility::getAllFilesAndFoldersInPath(
+            array(),
+            $path,
+            '',
+            false,
+            99,
+            $this->generateExcludeExpression($excludePattern)
+        );
         foreach ($filesArray as $file) {
             $relativeFileName = substr($file, strlen($path));
             $fileContent = GeneralUtility::getUrl($file);
@@ -44,5 +52,19 @@ class Md5sumGenerator implements ChecksumGeneratorInterface
         }
 
         return $md5ChecksumArray;
+    }
+
+    /**
+     * @param array $excludePattern
+     * @return string
+     */
+    protected function generateExcludeExpression(array $excludePattern)
+    {
+        array_walk($excludePattern, function(&$item) {
+            $item = preg_quote($item, '/');
+        });
+
+        return '(' . implode('|', $excludePattern) . ')';
+
     }
 }

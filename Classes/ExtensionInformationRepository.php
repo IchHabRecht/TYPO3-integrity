@@ -53,6 +53,11 @@ class ExtensionInformationRepository
     protected $storage;
 
     /**
+     * @var array
+     */
+    private static $vcsPatterns = array('.svn', '_svn', 'CVS', '_darcs', '.arch-params', '.monotone', '.bzr', '.git', '.hg');
+
+    /**
      * @param StorageInterface $storage
      * @param ConfigurationReaderInterface $configurationReader
      * @param ChecksumGeneratorInterface $checksumGenerator
@@ -113,7 +118,7 @@ class ExtensionInformationRepository
     {
         return array(
             'timestamp' => time(),
-            'checksums' => $this->checksumGenerator->getChecksumsForPath($package->getPackagePath()),
+            'checksums' => $this->checksumGenerator->getChecksumsForPath($package->getPackagePath(), static::$vcsPatterns),
         );
     }
 
@@ -125,7 +130,7 @@ class ExtensionInformationRepository
         $checksums = $this->configurationReader->getChecksumsForExtension($package);
         $this->extensionInformation[$package->getPackageKey()] = array(
             'timestamp' => time(),
-            'checksums' => $checksums ?: $this->checksumGenerator->getChecksumsForPath($package->getPackagePath()),
+            'checksums' => $checksums ?: $this->checksumGenerator->getChecksumsForPath($package->getPackagePath(), static::$vcsPatterns),
         );
     }
 

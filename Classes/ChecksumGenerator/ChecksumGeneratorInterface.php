@@ -29,8 +29,9 @@ interface ChecksumGeneratorInterface
 {
     /**
      * @param string $path
+     * @param array $excludePattern
      * @return array
      */
-    public function getChecksumsForPath($path);
+    public function getChecksumsForPath($path, array $excludePattern = array());
 
 }
