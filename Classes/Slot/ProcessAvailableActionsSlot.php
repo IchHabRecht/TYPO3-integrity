@@ -70,13 +70,8 @@ class ProcessAvailableActionsSlot implements SingletonInterface
     {
         /** @var Package $package */
         $package = $this->packageManager->getPackage($extension['key']);
-        $storedExtensionInformation = $this->extensionInformationRepository->getExtensionInformation($package);
-        $currentExtensionInformation = $this->extensionInformationRepository->fetchExtensionInformation($package);
-
-        $differences = array_diff($storedExtensionInformation['checksums'], $currentExtensionInformation['checksums']);
-        $hasChanges = !empty($differences);
-
-        $actions = $this->addActionAccordingToTypo3Version($hasChanges, $actions);
+        $differences = $this->extensionInformationRepository->findDifferentExtensionInformation($package);
+        $actions = $this->addActionAccordingToTypo3Version(!empty($differences), $actions);
     }
 
     /**
