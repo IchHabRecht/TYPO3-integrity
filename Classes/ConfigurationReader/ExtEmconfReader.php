@@ -41,8 +41,8 @@ class ExtEmconfReader implements ConfigurationReaderInterface
         if (file_exists($configurationFile)) {
             include $configurationFile;
 
-            if (!empty($EM_CONF['_md5_values_when_last_written'])) {
-                return unserialize($EM_CONF['_md5_values_when_last_written']);
+            if (!empty($EM_CONF[$_EXTKEY]['_md5_values_when_last_written'])) {
+                return unserialize($EM_CONF[$_EXTKEY]['_md5_values_when_last_written']);
             }
         }
 
