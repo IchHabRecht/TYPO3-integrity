@@ -33,5 +33,11 @@
         "psr-4": {
             "IchHabRecht\\Integrity\\Tests\\": "Tests"
         }
+    },
+    "extra": {
+        "typo3/cms": {
+            "cms-package-dir": "{$vendor-dir}/typo3/cms",
+            "web-dir": ".Build/Web"
+        }
     }
 }
