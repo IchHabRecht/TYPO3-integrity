@@ -36,6 +36,10 @@ class Md5sumGenerator implements ChecksumGeneratorInterface
      */
     public function getChecksumsForPath($path, array $excludePattern = array())
     {
+        // Always ensure trailing slash
+        // This is needed for relative path calculation
+        $path = rtrim($path, '/') . '/';
+
         $md5ChecksumArray = array();
         $filesArray = GeneralUtility::getAllFilesAndFoldersInPath(
             array(),
