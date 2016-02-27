@@ -1,3 +1,6 @@
+2016-02-27         [RELEASE] Release of integrity 0.1.1 (Nicole Cordes)
+2016-02-27 b13cbb0 [!!!][BUGFIX] Exclude VCS directories from checksum generation (Nicole Cordes)
+
 2016-02-27         [RELEASE] Release of integrity 0.1.0 (Nicole Cordes)
 2016-02-26 28dfb4a [TASK] Add composer.json (Nicole Cordes)
 2016-02-26 7fbd218 [TASK] Increase maximum supported TYPO3 version (Nicole Cordes)

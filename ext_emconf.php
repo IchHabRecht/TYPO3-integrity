@@ -21,8 +21,8 @@ $EM_CONF[$_EXTKEY] = array (
   'author' => 'Nicole Cordes',
   'author_email' => 'typo3@cordes.co',
   'author_company' => 'CPS-IT GmbH',
-  'version' => '0.1.0',
-  'constraints' => 
+  'version' => '0.1.1',
+  'constraints' =>
   array (
     'depends' => 
     array (
