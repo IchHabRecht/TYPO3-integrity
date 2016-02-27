@@ -50,7 +50,7 @@ script:
    - >
      echo;
      echo "Running php lint";
-     find . -name \*.php ! -path "./.Build/*" | parallel --gnu php -d display_errors=stderr -l {} > /dev/null \;
+     find . -not \( -path "./.Build" -prune \) -not \( -path "./typo3" -prune \) -not \( -path "./typo3_src" -prune \) -name \*.php | parallel --gnu php -d display_errors=stderr -l {} > /dev/null \;
    - >
      echo;
      export typo3DatabaseName="typo3";
