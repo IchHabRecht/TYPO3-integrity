@@ -37,7 +37,7 @@ before_install:
   - if [ "$GITHUB_COMPOSER_AUTH" ]; then composer config -g github-oauth.github.com $GITHUB_COMPOSER_AUTH; fi
 
 before_script:
-  - if [ "$TYPO3" == "^6.2.0" ]; then composer require typo3/cms-composer-installers="1.2.5 as 1.1.4"; fi
+  - if [ "$TYPO3" == "^6.2.0" ]; then composer require typo3/cms-composer-installers="1.2.5 as 1.1.4" --no-update; fi
   - composer require typo3/cms="$TYPO3"
   # Restore composer.json
   - git checkout composer.json
@@ -51,7 +51,7 @@ script:
    - >
      echo;
      echo "Running php lint";
-     find . -not \( -path "./.Build" -prune \) -not \( -path "./typo3" -prune \) -not \( -path "./typo3_src" -prune \) -name \*.php | parallel --gnu php -d display_errors=stderr -l {} > /dev/null \;
+     find . -name \*.php ! -path "./.Build/*" | parallel --gnu php -d display_errors=stderr -l {} > /dev/null \;
    - >
      echo;
      export typo3DatabaseName="typo3";
