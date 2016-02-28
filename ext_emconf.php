@@ -40,6 +40,11 @@ $EM_CONF[$_EXTKEY] = array (
           'IchHabRecht\\Integrity\\' => 'Classes',
       ),
   ),
+  'autoload-dev' => array(
+      'psr-4' => array(
+          'IchHabRecht\\Integrity\\Tests\\' => 'Tests',
+      ),
+  ),
   '_md5_values_when_last_written' => '',
 );
 
