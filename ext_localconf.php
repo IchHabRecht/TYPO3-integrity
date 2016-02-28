@@ -16,3 +16,6 @@ $signalSlotDispatcher->connect(
     'IchHabRecht\\Integrity\\Slot\\ProcessAvailableActionsSlot',
     'checkExtensionInformation'
 );
+
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] =
+    'IchHabRecht\\Integrity\\Command\\IntegrityCommandController';

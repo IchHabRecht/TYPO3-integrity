@@ -1,7 +1,7 @@
 <?php
 
 /***************************************************************
- * Extension Manager/Repository config file for ext "integrity".
+ * Extension Manager/Repository config file for ext "integrity_test".
  *
  * Auto generated 21-11-2015 00:04
  *
@@ -11,8 +11,8 @@
  ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array (
-  'title' => 'Extension Integrity Check',
-  'description' => 'Monitors the changes of your TYPO3 CMS extension files',
+  'title' => 'Test extension for EXT:integrity',
+  'description' => 'Allows to change files and directories',
   'category' => 'be',
   'state' => 'stable',
   'uploadfolder' => 0,
@@ -21,29 +21,18 @@ $EM_CONF[$_EXTKEY] = array (
   'author' => 'Nicole Cordes',
   'author_email' => 'typo3@cordes.co',
   'author_company' => 'CPS-IT GmbH',
-  'version' => '0.1.1',
+  'version' => '0.1.0',
   'constraints' =>
   array (
-    'depends' => 
-    array (
-      'typo3' => '6.2.0-8.99.99',
-    ),
-    'conflicts' => 
+    'depends' =>
     array (
     ),
-    'suggests' => 
+    'conflicts' =>
     array (
     ),
-  ),
-  'autoload' => array(
-      'psr-4' => array(
-          'IchHabRecht\\Integrity\\' => 'Classes',
-      ),
-  ),
-  'autoload-dev' => array(
-      'psr-4' => array(
-          'IchHabRecht\\Integrity\\Tests\\' => 'Tests',
-      ),
+    'suggests' =>
+    array (
+    ),
   ),
   '_md5_values_when_last_written' => '',
 );

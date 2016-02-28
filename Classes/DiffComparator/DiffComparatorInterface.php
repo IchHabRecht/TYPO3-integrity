@@ -1,10 +1,10 @@
 <?php
-namespace IchHabRecht\Integrity\ConfigurationReader;
+namespace IchHabRecht\Integrity\DiffComparator;
 
 /***************************************************************
  *  Copyright notice
  *
- *  (c) 2015 Nicole Cordes <typo3@cordes.co>, CPS-IT GmbH
+ *  (c) 2016 Nicole Cordes <typo3@cordes.co>, CPS-IT GmbH
  *
  *  All rights reserved
  *
@@ -25,27 +25,12 @@ namespace IchHabRecht\Integrity\ConfigurationReader;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use TYPO3\CMS\Core\Package\Package;
-
-class ExtEmconfReader implements ConfigurationReaderInterface
+interface DiffComparatorInterface
 {
     /**
-     * @param Package $package
+     * @param array $storedInformation
+     * @param array $currentInformation
      * @return array
      */
-    public function getChecksumsForExtension(Package $package)
-    {
-        $_EXTKEY = $package->getPackageKey();
-        $configurationFile = $package->getPackagePath() . 'ext_emconf.php';
-        $EM_CONF = null;
-        if (file_exists($configurationFile)) {
-            include $configurationFile;
-
-            if (!empty($EM_CONF[$_EXTKEY]['_md5_values_when_last_written'])) {
-                return unserialize($EM_CONF[$_EXTKEY]['_md5_values_when_last_written']);
-            }
-        }
-
-        return array();
-    }
+    public function getDifferences(array $storedInformation, array $currentInformation);
 }
