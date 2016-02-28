@@ -61,7 +61,7 @@ class ExtensionInformationRepository
     /**
      * @var array
      */
-    private static $vcsPatterns = array('.svn', '_svn', 'CVS', '_darcs', '.arch-params', '.monotone', '.bzr', '.git', '.hg');
+    private static $vcsPatterns = array('.svn', '_svn', 'CVS', '_darcs', '.arch-params', '.monotone', '.bzr', '.git', '.hg', '.Build');
 
     /**
      * @param StorageInterface $storage
