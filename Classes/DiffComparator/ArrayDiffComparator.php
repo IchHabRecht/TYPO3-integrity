@@ -34,24 +34,27 @@ class ArrayDiffComparator implements DiffComparatorInterface
      */
     public function getDifferences(array $storedInformation, array $currentInformation)
     {
+        $storedDifferences = array_diff_assoc($storedInformation, $currentInformation);
+        $currentDifferences = array_diff_assoc($currentInformation, $storedInformation);
+        if (empty($storedDifferences) && empty($currentDifferences)) {
+            return array();
+        }
+
         $resultArray = array();
 
-        $changed = array_diff_assoc($storedInformation, $currentInformation);
+        $changed = array_intersect_key($storedDifferences, $currentDifferences);
         if (!empty($changed)) {
-            $resultArray['changed'] = array_flip($changed);
+            $resultArray['changed'] = array_keys($changed);
         }
 
-        $storedInformationKeys = array_keys($storedInformation);
-        $currentInformationKeys = array_keys($currentInformation);
-
-        $removed = array_diff($storedInformationKeys, $currentInformationKeys);
+        $removed = array_diff_key($storedDifferences, $currentDifferences);
         if (!empty($removed)) {
-            $resultArray['removed'] = $removed;
+            $resultArray['removed'] = array_keys($removed);
         }
 
-        $new = array_diff($currentInformationKeys, $storedInformationKeys);
+        $new = array_diff_key($currentDifferences, $storedDifferences);
         if (!empty($new)) {
-            $resultArray['new'] = $new;
+            $resultArray['new'] = array_keys($new);
         }
 
         return $resultArray;
