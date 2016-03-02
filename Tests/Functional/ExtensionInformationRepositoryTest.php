@@ -100,35 +100,59 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
     /**
      * @test
      */
-    public function extensionChangesAreFound()
+    public function initialExtensionInformationAreClean()
     {
-        $this->addInitialExtensionInformation();
-        $this->assertCleanExtensionStates();
-        $this->installFixtureExtension();
-        $this->changeFixtureExtensionFiles();
-        $this->assertFixtureExtensionChangesAreFound();
-    }
-
-    /**
-     * Adds extension information to ExtensionInformationRepository
-     */
-    protected function addInitialExtensionInformation()
-    {
-        $repository = ExtensionInformationRepositoryFactory::create();
         $packages = $this->packageManager->getAvailablePackages();
+
+        $repository = ExtensionInformationRepositoryFactory::create();
         $repository->addExtensionInformation($packages);
-    }
 
-    /**
-     * Asserts no changes are found after initial storage
-     */
-    protected function assertCleanExtensionStates()
-    {
+        // Recreate repository and its data
         $repository = ExtensionInformationRepositoryFactory::create();
-        $packages = $this->packageManager->getAvailablePackages();
         foreach ($packages as $package) {
             $this->assertSame(array(), $repository->findDifferentExtensionInformation($package));
         }
+    }
+
+    /**
+     * @test
+     */
+    public function extensionInstallationWritesDatabaseData()
+    {
+        $this->assertSame(
+            0,
+            $this->getDatabaseConnection()->exec_SELECTcountRows(
+                'uid',
+                'sys_registry',
+                'entry_namespace=' . $this->getDatabaseConnection()->fullQuoteStr(RegistryStorage::REGISTRY_NAMESPACE, 'sys_registry')
+                . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($this->fixtureExtensionKey, 'sys_registry')
+            ));
+
+        $this->installFixtureExtension();
+
+        $this->assertSame(
+            1,
+            $this->getDatabaseConnection()->exec_SELECTcountRows(
+                'uid',
+                'sys_registry',
+                'entry_namespace=' . $this->getDatabaseConnection()->fullQuoteStr(RegistryStorage::REGISTRY_NAMESPACE, 'sys_registry')
+                . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($this->fixtureExtensionKey, 'sys_registry')
+            )
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function extensionInformationChangesAreFound()
+    {
+        $this->installFixtureExtension();
+        $this->changeFixtureExtensionFiles();
+
+        $package = $this->packageManager->getPackage($this->fixtureExtensionKey);
+        $repository = ExtensionInformationRepositoryFactory::create();
+
+        $this->assertSame($this->expectedDifferences, $repository->findDifferentExtensionInformation($package));
     }
 
     /**
@@ -136,13 +160,6 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
      */
     protected function installFixtureExtension()
     {
-        $this->assertEmpty($this->getDatabaseConnection()->exec_SELECTcountRows(
-            'uid',
-            'sys_registry',
-            'entry_namespace=' . $this->getDatabaseConnection()->fullQuoteStr(RegistryStorage::REGISTRY_NAMESPACE, 'sys_registry')
-            . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($this->fixtureExtensionKey, 'sys_registry')
-        ));
-
         $instancePath = $this->getInstancePath();
         GeneralUtility::mkdir($instancePath . '/typo3conf/ext/' . $this->fixtureExtensionKey);
         GeneralUtility::copyDirectory(
@@ -161,16 +178,6 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
         /** @var ExtensionManagementService $extensionManagementService */
         $extensionManagementService = $objectManager->get('TYPO3\\CMS\\Extensionmanager\\Service\\ExtensionManagementService');
         $extensionManagementService->installExtension($extension);
-
-        $this->assertSame(
-            1,
-            $this->getDatabaseConnection()->exec_SELECTcountRows(
-                'uid',
-                'sys_registry',
-                'entry_namespace=' . $this->getDatabaseConnection()->fullQuoteStr(RegistryStorage::REGISTRY_NAMESPACE, 'sys_registry')
-                . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($this->fixtureExtensionKey, 'sys_registry')
-            )
-        );
     }
 
     /**
@@ -196,17 +203,6 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
                 file_put_contents($packagePath . $file, 'Hello World');
             }
         }
-    }
-
-    /**
-     * Asserts the expected differences are found
-     */
-    protected function assertFixtureExtensionChangesAreFound()
-    {
-        $package = $this->packageManager->getPackage($this->fixtureExtensionKey);
-        $repository = ExtensionInformationRepositoryFactory::create();
-
-        $this->assertSame($this->expectedDifferences, $repository->findDifferentExtensionInformation($package));
     }
 
     /**
