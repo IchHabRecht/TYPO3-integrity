@@ -25,12 +25,13 @@ namespace IchHabRecht\Integrity\Tests\Functional;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use IchHabRecht\Integrity\ExtensionInformationRepository;
 use IchHabRecht\Integrity\ExtensionInformationRepositoryFactory;
 use IchHabRecht\Integrity\Storage\RegistryStorage;
 use org\bovigo\vfs\vfsStream;
+use TYPO3\CMS\Core\Package\DependencyResolver;
 use TYPO3\CMS\Core\Package\Package;
 use TYPO3\CMS\Core\Package\PackageManager;
+use TYPO3\CMS\Core\Tests\AccessibleObjectInterface;
 use TYPO3\CMS\Core\Tests\FunctionalTestCase;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
@@ -60,41 +61,11 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
         'typo3conf/ext/integrity',
     );
 
-    /**
-     * @var array
-     */
-    protected $expectedDifferences = array(
-        'changed' => array(
-            'ChangeLog',
-        ),
-        'removed' => array(
-            'ext_icon.png',
-        ),
-        'new' => array(
-            'NewFile.txt',
-        ),
-    );
-
-    /**
-     * @var string
-     */
-    protected $fixtureExtensionKey = 'integrity_test';
-
     public function setUp()
     {
         parent::setUp();
 
-        $GLOBALS['LANG'] = GeneralUtility::makeInstance('TYPO3\\CMS\\Lang\\LanguageService');
-        $GLOBALS['LANG']->init('default');
-
         $this->packageManager = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Package\\PackageManager');
-    }
-
-    public function tearDown()
-    {
-        parent::tearDown();
-
-        GeneralUtility::rmdir($this->getInstancePath() . '/typo3conf/ext/' . $this->fixtureExtensionKey, true);
     }
 
     /**
@@ -119,16 +90,17 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
      */
     public function extensionInstallationWritesDatabaseData()
     {
+        $extensionKey = 'integrity_test';
         $this->assertSame(
             0,
             $this->getDatabaseConnection()->exec_SELECTcountRows(
                 'uid',
                 'sys_registry',
                 'entry_namespace=' . $this->getDatabaseConnection()->fullQuoteStr(RegistryStorage::REGISTRY_NAMESPACE, 'sys_registry')
-                . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($this->fixtureExtensionKey, 'sys_registry')
+                . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($extensionKey, 'sys_registry')
             ));
 
-        $this->installFixtureExtension();
+        $this->installExtension($extensionKey);
 
         $this->assertSame(
             1,
@@ -136,7 +108,7 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
                 'uid',
                 'sys_registry',
                 'entry_namespace=' . $this->getDatabaseConnection()->fullQuoteStr(RegistryStorage::REGISTRY_NAMESPACE, 'sys_registry')
-                . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($this->fixtureExtensionKey, 'sys_registry')
+                . ' AND entry_key=' . $this->getDatabaseConnection()->fullQuoteStr($extensionKey, 'sys_registry')
             )
         );
     }
@@ -146,70 +118,124 @@ class ExtensionInformationRepositoryTest extends FunctionalTestCase
      */
     public function extensionInformationChangesAreFound()
     {
-        $this->installFixtureExtension();
-        $this->changeFixtureExtensionFiles();
+        $extensionKey = 'integrity_test';
+        $expectedDifferences = array(
+            'changed' => array(
+                'ChangeLog',
+            ),
+            'removed' => array(
+                'ext_icon.png',
+            ),
+            'new' => array(
+                'NewFile.txt',
+            ),
+        );
 
-        $package = $this->packageManager->getPackage($this->fixtureExtensionKey);
+        $this->installExtension($extensionKey);
+
+        $package = $this->packageManager->getPackage($extensionKey);
+        $this->changeExtensionFiles($package, $expectedDifferences);
+
         $repository = ExtensionInformationRepositoryFactory::create();
-
-        $this->assertSame($this->expectedDifferences, $repository->findDifferentExtensionInformation($package));
+        $this->assertSame($expectedDifferences, $repository->findDifferentExtensionInformation($package));
     }
 
     /**
-     * Copies and installs the fixture extension
+     * @param string $extensionKey
      */
-    protected function installFixtureExtension()
+    protected function installExtension($extensionKey)
     {
-        $instancePath = $this->getInstancePath();
-        GeneralUtility::mkdir($instancePath . '/typo3conf/ext/' . $this->fixtureExtensionKey);
-        GeneralUtility::copyDirectory(
-            $instancePath . '/typo3conf/ext/integrity/Tests/Functional/Fixtures/Extensions/' . $this->fixtureExtensionKey,
-            $instancePath . '/typo3conf/ext/' . $this->fixtureExtensionKey
-        );
+        if (!$this->packageManager instanceof \PHPUnit_Framework_MockObject_MockObject) {
+            $this->packageManager = $this->getPackageManagerMock();
+        }
+
+        $currentPackageManager = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Package\\PackageManager');
+        GeneralUtility::setSingletonInstance('TYPO3\\CMS\\Core\\Package\\PackageManager', $this->packageManager);
+
+        mkdir('vfs://Test/Packages/' . $extensionKey);
+        file_put_contents('vfs://Test/Packages/' . $extensionKey . '/ext_emconf.php', '<?php' . LF . '$EM_CONF[$_EXTKEY] = array();' . LF);
+        file_put_contents('vfs://Test/Packages/' . $extensionKey . '/ChangeLog', '');
+        file_put_contents('vfs://Test/Packages/' . $extensionKey . '/ext_icon.png', '');
+        file_put_contents('vfs://Test/Packages/' . $extensionKey . '/ext_localconf.php', '');
+        file_put_contents('vfs://Test/Packages/' . $extensionKey . '/ext_tables.php', '');
+
+        // Set current extension path as additional packagesBasePaths
+        // Needed since TYPO3 8 for symfony Finder
+        $packagesBasePaths = $this->packageManager->_get('packagesBasePaths');
+        $packagesBasePaths[$extensionKey] = 'vfs://Test/Packages/' . $extensionKey . '/';
+        $this->packageManager->_set('packagesBasePaths', $packagesBasePaths);
+
+        if (!isset($GLOBALS['LANG'])) {
+            $GLOBALS['LANG'] = GeneralUtility::makeInstance('TYPO3\\CMS\\Lang\\LanguageService');
+            $GLOBALS['LANG']->init('default');
+        }
+
+        /** @var InstallUtility|\PHPUnit_Framework_MockObject_MockObject $installUtilityMock */
+        $installUtilityMock = $this->getMock('TYPO3\\CMS\\Extensionmanager\\Utility\\InstallUtility', array('install'));
+        GeneralUtility::setSingletonInstance('TYPO3\\CMS\\Extensionmanager\\Utility\\InstallUtility', $installUtilityMock);
 
         /** @var ObjectManager $objectManager */
         $objectManager = GeneralUtility::makeInstance('TYPO3\\CMS\\Extbase\\Object\\ObjectManager');
 
+        /** @var ExtensionManagementService|AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject $extensionManagementService */
+        $extensionManagementService = $objectManager->get('TYPO3\\CMS\\Extensionmanager\\Service\\ExtensionManagementService');
+
         /** @var \TYPO3\CMS\Extensionmanager\Domain\Model\Extension $extension */
         $extension = $objectManager->get('TYPO3\\CMS\\Extensionmanager\\Domain\\Model\\Extension');
-        $extension->setExtensionKey($this->fixtureExtensionKey);
+        $extension->setExtensionKey($extensionKey);
         $extension->setVersion('0.1.0');
-
-        /** @var ExtensionManagementService $extensionManagementService */
-        $extensionManagementService = $objectManager->get('TYPO3\\CMS\\Extensionmanager\\Service\\ExtensionManagementService');
         $extensionManagementService->installExtension($extension);
+
+        GeneralUtility::removeSingletonInstance('TYPO3\\CMS\\Extensionmanager\\Utility\\InstallUtility', $installUtilityMock);
+        GeneralUtility::setSingletonInstance('TYPO3\\CMS\\Core\\Package\\PackageManager', $currentPackageManager);
     }
 
     /**
-     * Changes, removes and adds expected changes to fixture extension files
+     * @param Package $package
+     * @param array $differences
      */
-    protected function changeFixtureExtensionFiles()
+    protected function changeExtensionFiles(Package $package, array $differences)
     {
-        $package = $this->packageManager->getPackage($this->fixtureExtensionKey);
         $packagePath = $package->getPackagePath();
 
-        if (!empty($this->expectedDifferences['changed'])) {
-            foreach ($this->expectedDifferences['changed'] as $file) {
+        if (!empty($differences['changed'])) {
+            foreach ($differences['changed'] as $file) {
                 file_put_contents($packagePath . $file, LF . LF . 'Hello World', FILE_APPEND);
             }
         }
-        if (!empty($this->expectedDifferences['removed'])) {
-            foreach ($this->expectedDifferences['removed'] as $file) {
+        if (!empty($differences['removed'])) {
+            foreach ($differences['removed'] as $file) {
                 GeneralUtility::rmdir($packagePath . $file);
             }
         }
-        if (!empty($this->expectedDifferences['new'])) {
-            foreach ($this->expectedDifferences['new'] as $file) {
+        if (!empty($differences['new'])) {
+            foreach ($differences['new'] as $file) {
                 file_put_contents($packagePath . $file, 'Hello World');
             }
         }
     }
 
     /**
-     * @return string
+     * @return PackageManager|AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject
      */
-    protected function getInstancePath()
-    {
-        return property_exists($this, 'instancePath') ? $this->instancePath : parent::getInstancePath();
+    protected function getPackageManagerMock() {
+        vfsStream::setup('Test');
+
+        /** @var DependencyResolver|\PHPUnit_Framework_MockObject_MockObject $dependencyResolverMock */
+        $dependencyResolverMock = $this->getMock('TYPO3\\CMS\\Core\\Package\\DependencyResolver');
+        $dependencyResolverMock->expects($this->any())->method('sortPackageStatesConfigurationByDependency')->willReturnArgument(0);
+
+        /** @var PackageManager|AccessibleObjectInterface|\PHPUnit_Framework_MockObject_MockObject $packageManagerMock */
+        $packageManagerMock = $this->getAccessibleMock('TYPO3\\CMS\\Core\\Package\\PackageManager', array('dummy'));
+        $packageManagerMock->injectDependencyResolver($dependencyResolverMock);
+
+        mkdir('vfs://Test/Configuration');
+        mkdir('vfs://Test/Packages');
+        file_put_contents('vfs://Test/Configuration/PackageStates.php', "<?php return array ('packages' => array(), 'version' => 4); ");
+        $packageManagerMock->_set('packageStatesPathAndFilename', 'vfs://Test/Configuration/PackageStates.php');
+        $packageManagerMock->_set('packagesBasePath', 'vfs://Test/Packages/');
+        $packageManagerMock->_set('packagesBasePaths', array('local' => 'vfs://Test/Packages'));
+
+        return $packageManagerMock;
     }
 }
